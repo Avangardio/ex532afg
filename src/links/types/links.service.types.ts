@@ -1,21 +1,31 @@
-interface AddLink {
-  addLink(data: AddLinkBody): Promise<string | null>;
+export interface AddLink {
+  addLink(data: AddLinkBody): Promise<string>;
 }
 
-interface RemoveLink {
-
+export interface DeleteLink {
+  deleteLink(url: string, userId: number): Promise<boolean>;
 }
 
-interface GetOneLink {
-
+export interface GetOneLink {
+  getLink(code: string): Promise<string>;
 }
 
-interface GetAllLink {
-
+export interface GetAllLinks {
+  getLinks(data: GetLinksBody): Promise<TableWithCount>;
 }
 
-type AddLinkBody = {
-  name: string,
-  url: string,
-  userId: number,
+export type AddLinkBody = {
+  name: string;
+  url: string;
+  userId: number;
+}
+
+export type GetLinksBody = {
+  userId: number;
+  page: number;
+}
+
+export type TableWithCount = {
+  count: number;
+  table: string;
 }

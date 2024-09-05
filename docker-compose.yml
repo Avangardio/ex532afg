@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  scylla:
+    image: scylladb/scylla
+    container_name: scylla
+    ports:
+      - "9042:9042"
+    networks:
+      - app-network
+    volumes:
+      - scylladata:/var/lib/scylla
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 20s
+      timeout: 5s
+
+  init-scylla:
+    image: scylladb/scylla
+    depends_on:
+      scylla:
+        condition: service_healthy
+    networks:
+      - app-network
+    entrypoint: >
+      sh -c "
+        echo 'Waiting for ScyllaDB to be ready...';
+        until cqlsh scylla -e 'describe keyspaces'; do
+          sleep 5;
+        done;
+        echo 'ScyllaDB is ready. Creating keyspace...';
+        cqlsh scylla -e \"CREATE KEYSPACE IF NOT EXISTS telegram WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1};\"
+      "
+    restart: "no"
+
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      scylla:
+        condition: service_healthy
+    networks:
+      - app-network
+
+volumes:
+  scylladata:
+networks:
+  app-network:
+    driver: bridge
+    name: network
